@@ -34,20 +34,13 @@ public class AuthService {
         String username = request.getUsername() == null ? "" : request.getUsername().trim();
         String password = request.getPassword() == null ? "" : request.getPassword().trim();
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
-
-        if (!Boolean.TRUE.equals(user.getIsActive())) {
-            throw new DisabledException("User is inactive");
-        }
-
-        if (!DEFAULT_ADMIN_USERNAME.equals(username) || !DEFAULT_ADMIN_PASSWORD.equals(password)) {
-            throw new BadCredentialsException("Invalid username or password");
+        if (!"rajat".equals(username) || !"rajat123".equals(password)) {
+            throw new RuntimeException("Invalid login credentials");
         }
 
         return new LoginResponse(
-                jwtService.generateAccessToken(user.getUsername()),
-                jwtService.generateRefreshToken(user.getUsername()),
+                jwtService.generateAccessToken(username),
+                jwtService.generateRefreshToken(username),
                 "Bearer",
                 jwtProperties.getExpirationMs()
         );
