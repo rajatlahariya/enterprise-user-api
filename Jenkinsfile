@@ -8,13 +8,7 @@ pipeline {
     stages {
         stage('Build Jar') {
             steps {
-                sh '''
-                docker run --rm \
-                  -v "$PWD":/app \
-                  -w /app \
-                  maven:3.9.11-eclipse-temurin-21 \
-                  mvn clean package -DskipTests
-                '''
+                sh './mvnw clean package -DskipTests'
             }
         }
 
@@ -38,6 +32,16 @@ pipeline {
                   -e DB_PASSWORD=postgres \
                   -e AUTH_TYPE=${AUTH_TYPE} \
                   enterprise-user-api:latest
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh '''
+                echo "Waiting for application..."
+                sleep 20
+                curl -f http://enterprise-user-api:8081/actuator/health
                 '''
             }
         }
