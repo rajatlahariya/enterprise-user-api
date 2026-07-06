@@ -12,6 +12,8 @@ pipeline {
         DB_URL = 'jdbc:postgresql://enterprise-user-api-db:5432/automationdb'
         DB_USERNAME = 'postgres'
         DB_PASSWORD = 'postgres'
+        GOOGLE_CLIENT_ID = credentials('google-client-id')
+		GOOGLE_CLIENT_SECRET = credentials('google-client-secret')
     }
 
     stages {
@@ -40,6 +42,8 @@ pipeline {
                   -e DB_USERNAME=$DB_USERNAME \
                   -e DB_PASSWORD=$DB_PASSWORD \
                   -e AUTH_TYPE=$AUTH_TYPE \
+                  -e GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
+					-e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
                   $IMAGE_NAME
                 '''
             }
