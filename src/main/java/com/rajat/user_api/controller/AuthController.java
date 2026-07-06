@@ -19,6 +19,10 @@ public class AuthController {
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("AUTH CONTROLLER HIT");
+    }
 
     @PostMapping("/login")
     public ResponseEntity<ApiSuccessResponse<LoginResponse>> login(
