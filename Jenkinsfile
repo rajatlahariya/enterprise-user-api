@@ -6,15 +6,15 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build Jar') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh '''
+                docker run --rm \
+                  -v "$PWD":/app \
+                  -w /app \
+                  maven:3.9.11-eclipse-temurin-21 \
+                  mvn clean package -DskipTests
+                '''
             }
         }
 
