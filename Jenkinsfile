@@ -42,6 +42,7 @@ pipeline {
                   -e DB_USERNAME=$DB_USERNAME \
                   -e DB_PASSWORD=$DB_PASSWORD \
                   -e AUTH_TYPE=$AUTH_TYPE \
+                  -e SPRING_PROFILES_ACTIVE=$AUTH_TYPE \
                   -e GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
 					-e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
                   $IMAGE_NAME
