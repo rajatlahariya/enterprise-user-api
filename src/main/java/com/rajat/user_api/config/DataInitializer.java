@@ -17,23 +17,19 @@ public class DataInitializer {
             PasswordEncoder passwordEncoder) {
 
         return args -> {
-            boolean userExists = userRepository.findByUsername("rajat").isPresent();
+            User user = userRepository.findByUsername("rajat")
+                    .orElseGet(User::new);
 
-            if (!userExists) {
-                User user = new User();
+            user.setFirstName("Rajat");
+            user.setLastName("Lahariya");
+            user.setEmail("rajat2496@gmail.com");
+            user.setAge(29);
+            user.setIsActive(true);
+            user.setUsername("rajat");
+            user.setPassword(passwordEncoder.encode("rajat123"));
+            user.setRole("ROLE_ADMIN");
 
-                user.setFirstName("Rajat");
-                user.setLastName("Lahariya");
-                user.setEmail("rajat2496@gmail.com");
-                user.setAge(29);
-                user.setIsActive(true);
-                user.setUsername("rajat");
-                user.setPassword(passwordEncoder.encode("rajat123"));
-                user.setRole("ROLE_ADMIN");
-
-                userRepository.save(user);
-            }
-            
+            userRepository.save(user);
         };
     }
 }
