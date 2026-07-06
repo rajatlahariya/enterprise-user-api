@@ -2,6 +2,8 @@ package com.rajat.user_api.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -34,25 +36,37 @@ public class AuthController {
     public ResponseEntity<ApiSuccessResponse<LoginResponse>> login(
             @RequestBody LoginRequest request) {
 
-        Authentication authentication =
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                request.getUsername(),
-                                request.getPassword()
-                        ));
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()
+                    )
+            );
 
-        String username = authentication.getName();
+            String username = authentication.getName();
 
-        LoginResponse response = new LoginResponse(
-                jwtService.generateAccessToken(username),
-                jwtService.generateRefreshToken(username),
-                "Bearer",
-                jwtProperties.getExpirationMs()
-        );
+            LoginResponse response = new LoginResponse(
+                    jwtService.generateAccessToken(username),
+                    jwtService.generateRefreshToken(username),
+                    "Bearer",
+                    jwtProperties.getExpirationMs()
+            );
 
-        return ResponseEntity.ok(
-                ApiResponseBuilder.success("Login successful", response)
-        );
+            return ResponseEntity.ok(
+                    ApiResponseBuilder.success("Login successful", response)
+            );
+
+        } catch (DisabledException ex) {
+            throw ex;
+
+        } catch (BadCredentialsException ex) {
+            throw ex;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ex;
+        }
     }
 
     @PostMapping("/refresh")
