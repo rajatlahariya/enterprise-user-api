@@ -12,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import com.rajat.user_api.security.authentication.AuthenticationStrategyFactory;
 import com.rajat.user_api.security.service.CustomUserDetailsService;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 
 @Configuration
 public class SecurityConfig {
@@ -49,5 +50,16 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(DaoAuthenticationProvider authenticationProvider) {
         return new org.springframework.security.authentication.ProviderManager(authenticationProvider);
+    }
+    
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers(
+                "/auth/**",
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/actuator/health",
+                "/actuator/info"
+        );
     }
 }
