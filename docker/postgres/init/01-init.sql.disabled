@@ -1,0 +1,20 @@
+INSERT INTO users (
+    first_name,
+    last_name,
+    email,
+    age,
+    is_active,
+    username,
+    password,
+    role
+)
+VALUES (
+    'Rajat',
+    'Lahariya',
+    'rajat2496@gmail.com',
+    29,
+    true,
+    'rajat',
+    '$2a$10$wqF5G8o7AEECttPLpwQeqOGv0qBzm4a7TGt0X7MEb0uGrHRPrkdcG',
+    'ROLE_ADMIN'
+);
