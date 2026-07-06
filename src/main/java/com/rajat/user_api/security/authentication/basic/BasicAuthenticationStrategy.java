@@ -25,7 +25,9 @@ public class BasicAuthenticationStrategy implements AuthenticationStrategy {
                     .requestMatchers(
                             "/auth/**",
                             "/swagger-ui/**",
-                            "/v3/api-docs/**"
+                            "/v3/api-docs/**",
+                            "/actuator/health",
+                            "/actuator/info"
                     ).permitAll()
                     .anyRequest().authenticated()
             );
