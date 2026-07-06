@@ -2,7 +2,6 @@ package com.rajat.user_api.security.service;
 
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.rajat.user_api.dto.request.LoginRequest;
@@ -19,16 +18,13 @@ public class AuthService {
     private static final String DEFAULT_ADMIN_PASSWORD = "rajat123";
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
 
     public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        JwtProperties jwtProperties) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
     }
@@ -45,13 +41,7 @@ public class AuthService {
             throw new DisabledException("User is inactive");
         }
 
-        boolean dbPasswordMatched = passwordEncoder.matches(password, user.getPassword());
-
-        boolean defaultAdminMatched =
-                DEFAULT_ADMIN_USERNAME.equals(username)
-                        && DEFAULT_ADMIN_PASSWORD.equals(password);
-
-        if (!dbPasswordMatched && !defaultAdminMatched) {
+        if (!DEFAULT_ADMIN_USERNAME.equals(username) || !DEFAULT_ADMIN_PASSWORD.equals(password)) {
             throw new BadCredentialsException("Invalid username or password");
         }
 
