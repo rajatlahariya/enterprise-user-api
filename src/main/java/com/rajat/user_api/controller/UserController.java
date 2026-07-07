@@ -93,7 +93,7 @@ public class UserController {
                 .body(ApiResponseBuilder.success("User created successfully", savedUser));
     }
 
-    @Operation(summary = "Get users", description = "Returns paginated users with filtering, pagination and sorting.")
+    @Operation(summary = "Get users", description = "Returns paginated users with filtering, pagination and sorting. Supports firstName, username, email, role, isActive, minAge, maxAge, page, size and sort.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Users fetched successfully",
                     content = @Content(mediaType = "application/json",
@@ -128,7 +128,16 @@ public class UserController {
             @Parameter(description = "Filter by first name", example = "raj")
             @RequestParam(required = false) String firstName,
 
-            @Parameter(description = "Filter by active status. Default is true.", example = "true")
+            @Parameter(description = "Filter by username", example = "seed.aarav")
+            @RequestParam(required = false) String username,
+
+            @Parameter(description = "Filter by email", example = "enterprise.test")
+            @RequestParam(required = false) String email,
+
+            @Parameter(description = "Filter by role", example = "ROLE_MANAGER")
+            @RequestParam(required = false) String role,
+
+            @Parameter(description = "Filter by active status", example = "true")
             @RequestParam(required = false) Boolean isActive,
 
             @Parameter(description = "Minimum age", example = "25")
@@ -141,7 +150,16 @@ public class UserController {
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC)
             Pageable pageable) {
 
-        Page<UserResponse> usersPage = userService.searchUsers(firstName, isActive, minAge, maxAge, pageable);
+        Page<UserResponse> usersPage = userService.searchUsers(
+                firstName,
+                username,
+                email,
+                role,
+                isActive,
+                minAge,
+                maxAge,
+                pageable
+        );
 
         return ResponseEntity.ok(ApiResponseBuilder.paged("Users fetched successfully", usersPage));
     }

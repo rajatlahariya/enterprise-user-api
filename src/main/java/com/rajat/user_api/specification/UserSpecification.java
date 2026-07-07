@@ -44,4 +44,38 @@ public class UserSpecification {
             return criteriaBuilder.lessThanOrEqualTo(root.get("age"), maxAge);
         };
     }
+
+
+    public static Specification<User> hasUsername(String username) {
+        return (root, query, criteriaBuilder) -> {
+            if (username == null || username.isBlank()) {
+                return null;
+            }
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("username")),
+                    "%" + username.toLowerCase() + "%"
+            );
+        };
+    }
+
+    public static Specification<User> hasEmail(String email) {
+        return (root, query, criteriaBuilder) -> {
+            if (email == null || email.isBlank()) {
+                return null;
+            }
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("email")),
+                    "%" + email.toLowerCase() + "%"
+            );
+        };
+    }
+
+    public static Specification<User> hasRole(String role) {
+        return (root, query, criteriaBuilder) -> {
+            if (role == null || role.isBlank()) {
+                return null;
+            }
+            return criteriaBuilder.equal(root.get("role"), role);
+        };
+    }
 }

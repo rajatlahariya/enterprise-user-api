@@ -157,24 +157,34 @@ public class UserService {
 	}
 
 	public Page<UserResponse> searchUsers(String firstName,
+			String username,
+			String email,
+			String role,
 			Boolean isActive,
 			Integer minAge,
 			Integer maxAge,
 			Pageable pageable) {
 
 		logger.info(
-				"Searching users with filters: firstName={}, isActive={}, minAge={}, maxAge={}, page={}, size={}",
+				"Searching users with filters: firstName={}, username={}, email={}, role={}, isActive={}, minAge={}, maxAge={}, page={}, size={}, sort={}",
 				firstName,
+				username,
+				email,
+				role,
 				isActive,
 				minAge,
 				maxAge,
 				pageable.getPageNumber(),
-				pageable.getPageSize()
+				pageable.getPageSize(),
+				pageable.getSort()
 				);
-		Boolean activeFilter = isActive != null ? isActive : true;
+
 		Specification<User> spec = Specification
 				.where(UserSpecification.hasFirstName(firstName))
-				.and(UserSpecification.hasActiveStatus(activeFilter))
+				.and(UserSpecification.hasUsername(username))
+				.and(UserSpecification.hasEmail(email))
+				.and(UserSpecification.hasRole(role))
+				.and(UserSpecification.hasActiveStatus(isActive))
 				.and(UserSpecification.ageGreaterThanOrEqual(minAge))
 				.and(UserSpecification.ageLessThanOrEqual(maxAge));
 
@@ -185,6 +195,7 @@ public class UserService {
 
 		return users;
 	}
+
 
 
 }
