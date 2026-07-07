@@ -1,5 +1,7 @@
 package com.rajat.user_api.security.service;
 
+import java.util.List;
+
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -8,9 +10,10 @@ import org.springframework.stereotype.Service;
 import com.rajat.user_api.dto.request.ClientCredentialsRequest;
 import com.rajat.user_api.dto.request.LoginRequest;
 import com.rajat.user_api.dto.response.LoginResponse;
+import com.rajat.user_api.entity.OAuthClient;
 import com.rajat.user_api.entity.User;
 import com.rajat.user_api.repository.UserRepository;
-import com.rajat.user_api.security.config.ClientCredentialsProperties;
+import com.rajat.user_api.security.client.ClientAuthenticationService;
 import com.rajat.user_api.security.jwt.JwtProperties;
 import com.rajat.user_api.security.jwt.JwtService;
 
@@ -21,24 +24,24 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
-    private final ClientCredentialsProperties clientCredentialsProperties;
+    private final ClientAuthenticationService clientAuthenticationService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        JwtProperties jwtProperties,
-                       ClientCredentialsProperties clientCredentialsProperties) {
+                       ClientAuthenticationService clientAuthenticationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
-        this.clientCredentialsProperties = clientCredentialsProperties;
+        this.clientAuthenticationService = clientAuthenticationService;
     }
 
     public LoginResponse login(LoginRequest request) {
 
-        String username = request.getUsername() == null ? "" : request.getUsername().trim();
-        String password = request.getPassword() == null ? "" : request.getPassword().trim();
+        String username = normalize(request.getUsername());
+        String password = normalize(request.getPassword());
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
@@ -59,19 +62,16 @@ public class AuthService {
         );
     }
 
-
     public LoginResponse generateClientToken(ClientCredentialsRequest request) {
 
-        String clientId = request.getClientId() == null ? "" : request.getClientId().trim();
-        String clientSecret = request.getClientSecret() == null ? "" : request.getClientSecret().trim();
+        String clientId = normalize(request.getClientId());
+        String clientSecret = normalize(request.getClientSecret());
 
-        if (!clientId.equals(clientCredentialsProperties.getClientId())
-                || !clientSecret.equals(clientCredentialsProperties.getClientSecret())) {
-            throw new BadCredentialsException("Invalid client credentials");
-        }
+        OAuthClient client = clientAuthenticationService.authenticate(clientId, clientSecret);
+        List<String> scopes = clientAuthenticationService.getScopes(client);
 
         return new LoginResponse(
-                jwtService.generateAccessToken(clientId),
+                jwtService.generateClientAccessToken(client.getClientId(), scopes),
                 null,
                 "Bearer",
                 jwtProperties.getExpirationMs()
@@ -92,5 +92,9 @@ public class AuthService {
                 "Bearer",
                 jwtProperties.getExpirationMs()
         );
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 }

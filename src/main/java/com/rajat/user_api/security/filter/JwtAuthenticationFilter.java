@@ -1,8 +1,10 @@
 package com.rajat.user_api.security.filter;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -54,21 +56,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String username = jwtService.extractUsername(token);
+        String subject = jwtService.extractUsername(token);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            UsernamePasswordAuthenticationToken authenticationToken = jwtService.isClientToken(token)
+                    ? buildClientAuthentication(token, subject)
+                    : buildUserAuthentication(token, subject);
 
-            if (jwtService.isTokenValid(token, userDetails.getUsername())) {
-
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-
+            if (authenticationToken != null) {
                 authenticationToken.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
@@ -78,5 +74,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private UsernamePasswordAuthenticationToken buildUserAuthentication(String token, String username) {
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        if (!jwtService.isTokenValid(token, userDetails.getUsername())) {
+            return null;
+        }
+
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+        );
+    }
+
+    private UsernamePasswordAuthenticationToken buildClientAuthentication(String token, String clientId) {
+
+        if (!jwtService.isTokenValid(token, clientId)) {
+            return null;
+        }
+
+        List<SimpleGrantedAuthority> authorities = jwtService.extractScopes(token).stream()
+                .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope))
+                .toList();
+
+        return new UsernamePasswordAuthenticationToken(
+                clientId,
+                null,
+                authorities
+        );
     }
 }
