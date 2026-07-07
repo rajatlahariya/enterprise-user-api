@@ -33,3 +33,28 @@ curl -i "http://localhost:8081/users?role=ROLE_MANAGER&page=0&size=5&sort=userna
 curl -i "http://localhost:8081/users?isActive=false&page=0&size=5"
 curl -i "http://localhost:8081/users?minAge=30&maxAge=40&page=0&size=10&sort=age,desc"
 ```
+
+
+## Phase B Authorization Completion
+
+- B3: Sorting verification - completed
+- B4: Advanced filtering - completed
+- B5: RBAC authorization - completed
+- B6: Client token boundary enforcement - completed
+- B7: SDET handoff readiness - completed
+
+### B7 Verification Commands
+
+```bash
+AUTH_TYPE=jwt BASE_URL=http://localhost:8081 ./scripts/smoke-test.sh
+AUTH_TYPE=basic BASE_URL=http://localhost:8081 ./scripts/smoke-test.sh
+AUTH_TYPE=oauth2 BASE_URL=http://localhost:8081 ./scripts/smoke-test.sh
+```
+
+Expected JWT-mode checks:
+
+- `/actuator/health` returns `UP`
+- `/auth/login` returns a user JWT
+- admin token can access `/users`
+- client token receives `403` for `/users`
+```

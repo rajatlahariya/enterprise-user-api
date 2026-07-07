@@ -91,6 +91,21 @@ OAuth2 authorization entrypoint:
 curl -i http://localhost:8081/oauth2/authorization/google
 ```
 
+
+## Authorization
+
+Authorization rules are documented in [Authorization Matrix](docs/authorization-matrix.md).
+
+Important boundary:
+
+```text
+User JWT with ROLE_ADMIN/ROLE_MANAGER can access user-management APIs.
+Client credentials JWT is a machine token and must not access human user APIs.
+```
+
+The local smoke script verifies this boundary in `AUTH_TYPE=jwt` mode.
+
+
 ## Jenkins CI/CD Flow
 
 ```text
@@ -122,6 +137,7 @@ After `v1.0-auth-cicd`, development switches to the SDET phase documented in [SD
 - [Phase A Checkpoints](docs/checkpoints.md)
 - [v1.0 Release Checklist](docs/release-checklist.md)
 - [SDET Transition Plan](docs/sdet-transition.md)
+- [Authorization Matrix](docs/authorization-matrix.md)
 
 
 ## Client Credentials Token
