@@ -18,7 +18,7 @@ public class DataInitializer {
     private static final String DEFAULT_CLIENT_ID = "rest-assured-client";
     private static final String DEFAULT_CLIENT_SECRET = "secret123";
     private static final String TEST_USER_PASSWORD = "Password@123";
-    private static final int REQUIRED_TEST_USERS = 150;
+    private static final int REQUIRED_TEST_USERS = 200;
 
     private static final String[] FIRST_NAMES = {
             "Aarav", "Vivaan", "Aditya", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan", "Shaurya",
@@ -115,11 +115,11 @@ public class DataInitializer {
     }
 
     private String resolveRole(int sequence) {
-        if (sequence <= 8) {
+        if (sequence <= 10) {
             return "ROLE_ADMIN";
         }
 
-        if (sequence <= 30) {
+        if (sequence <= 50) {
             return "ROLE_MANAGER";
         }
 
