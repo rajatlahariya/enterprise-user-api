@@ -1,0 +1,84 @@
+diff --git a/src/main/java/com/rajat/user_api/controller/UserController.java b/src/main/java/com/rajat/user_api/controller/UserController.java
+--- a/src/main/java/com/rajat/user_api/controller/UserController.java	2026-07-07 08:08:26.489211666 +0000
++++ b/src/main/java/com/rajat/user_api/controller/UserController.java	2026-07-07 08:10:10.653173205 +0000
+@@ -8,6 +8,7 @@
+ import org.springframework.data.domain.Sort;
+ import org.springframework.data.web.PageableDefault;
+ import org.springframework.http.ResponseEntity;
++import org.springframework.security.access.prepost.PreAuthorize;
+ import org.springframework.web.bind.annotation.*;
+ 
+ import com.rajat.user_api.dto.request.UserPatchRequest;
+@@ -84,6 +85,7 @@
+                       "isActive": true
+                     }
+                     """)))
++    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
+     @PostMapping
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> createUser(@Valid @RequestBody UserRequest request) {
+         UserResponse savedUser = userService.saveUser(request);
+@@ -123,6 +125,7 @@
+                             }
+                             """)))
+     })
++    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
+     @GetMapping
+     public ResponseEntity<PagedResponse<List<UserResponse>>> getUsers(
+             @Parameter(description = "Filter by first name", example = "raj")
+@@ -176,6 +179,7 @@
+                             }
+                             """)))
+     })
++    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
+     @GetMapping("/{id}")
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> getUserById(
+             @Parameter(description = "User ID", example = "1")
+@@ -191,6 +195,7 @@
+             @ApiResponse(responseCode = "200", description = "User fetched successfully"),
+             @ApiResponse(responseCode = "404", description = "User not found")
+     })
++    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
+     @GetMapping("/search")
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> getUserByEmail(
+             @Parameter(description = "User email", example = "rajat2496@gmail.com", required = true)
+@@ -220,6 +225,7 @@
+                       "isActive": true
+                     }
+                     """)))
++    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
+     @PutMapping("/{id}")
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> updateUser(
+             @Parameter(description = "User ID", example = "1")
+@@ -245,6 +251,7 @@
+                       "email": "rajat.patch@gmail.com"
+                     }
+                     """)))
++    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
+     @PatchMapping("/{id}")
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> patchUser(
+             @Parameter(description = "User ID", example = "1")
+@@ -261,6 +268,7 @@
+             @ApiResponse(responseCode = "204", description = "User soft deleted successfully"),
+             @ApiResponse(responseCode = "404", description = "User not found")
+     })
++    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
+     @DeleteMapping("/{id}")
+     public ResponseEntity<Void> deleteUser(
+             @Parameter(description = "User ID", example = "1")
+diff --git a/src/main/java/com/rajat/user_api/security/config/SecurityConfig.java b/src/main/java/com/rajat/user_api/security/config/SecurityConfig.java
+--- a/src/main/java/com/rajat/user_api/security/config/SecurityConfig.java	2026-07-07 08:08:26.493857064 +0000
++++ b/src/main/java/com/rajat/user_api/security/config/SecurityConfig.java	2026-07-07 08:09:05.296115842 +0000
+@@ -9,11 +9,13 @@
+ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+ import org.springframework.security.crypto.password.PasswordEncoder;
+ import org.springframework.security.web.SecurityFilterChain;
++import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+ 
+ import com.rajat.user_api.security.authentication.AuthenticationStrategyFactory;
+ import com.rajat.user_api.security.service.CustomUserDetailsService;
+ 
+ @Configuration
++@EnableMethodSecurity
+ public class SecurityConfig {
+ 
+     private final AuthenticationStrategyFactory strategyFactory;
