@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.rajat.user_api.dto.request.ClientCredentialsRequest;
 import com.rajat.user_api.dto.request.LoginRequest;
 import com.rajat.user_api.dto.request.RefreshTokenRequest;
 import com.rajat.user_api.dto.response.LoginResponse;
@@ -31,6 +32,18 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 ApiResponseBuilder.success("Login successful", response)
+        );
+    }
+
+
+    @PostMapping("/client-token")
+    public ResponseEntity<ApiSuccessResponse<LoginResponse>> clientToken(
+            @RequestBody ClientCredentialsRequest request) {
+
+        LoginResponse response = authService.generateClientToken(request);
+
+        return ResponseEntity.ok(
+                ApiResponseBuilder.success("Client token generated successfully", response)
         );
     }
 

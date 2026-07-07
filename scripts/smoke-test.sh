@@ -5,6 +5,8 @@ BASE_URL="${BASE_URL:-http://localhost:8081}"
 AUTH_TYPE="${AUTH_TYPE:-jwt}"
 USERNAME="${SMOKE_USERNAME:-rajat}"
 PASSWORD="${SMOKE_PASSWORD:-rajat123}"
+CLIENT_ID="${CLIENT_AUTH_ID:-rest-assured-client}"
+CLIENT_SECRET="${CLIENT_AUTH_SECRET:-secret123}"
 
 echo "Running smoke checks"
 echo "BASE_URL=${BASE_URL}"
@@ -12,6 +14,11 @@ echo "AUTH_TYPE=${AUTH_TYPE}"
 
 curl -fs "${BASE_URL}/actuator/health" | grep -q '"status":"UP"'
 echo "Health check passed"
+
+curl -fs -X POST "${BASE_URL}/auth/client-token" \
+  -H "Content-Type: application/json" \
+  -d "{\"clientId\":\"${CLIENT_ID}\",\"clientSecret\":\"${CLIENT_SECRET}\"}" | grep -q "accessToken"
+echo "Client credentials token smoke test passed"
 
 case "${AUTH_TYPE}" in
   jwt)

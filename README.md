@@ -122,3 +122,33 @@ After `v1.0-auth-cicd`, development switches to the SDET phase documented in [SD
 - [Phase A Checkpoints](docs/checkpoints.md)
 - [v1.0 Release Checklist](docs/release-checklist.md)
 - [SDET Transition Plan](docs/sdet-transition.md)
+
+
+## Client Credentials Token
+
+This project also exposes a machine-to-machine token endpoint for automation and service-to-service testing.
+
+```http
+POST /auth/client-token
+```
+
+Request:
+
+```json
+{
+  "clientId": "rest-assured-client",
+  "clientSecret": "secret123"
+}
+```
+
+Response contains a JWT access token that can be used as a Bearer token for protected APIs.
+
+Environment variables:
+
+| Variable | Default |
+|---|---|
+| `CLIENT_AUTH_ID` | `rest-assured-client` |
+| `CLIENT_AUTH_SECRET` | `secret123` |
+
+This endpoint is useful for Rest Assured tests because it avoids browser-based OAuth2 login while still validating Bearer token based access.
+
