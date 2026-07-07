@@ -30,6 +30,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       AUTH_TYPE: jwt
+      SPRING_PROFILES_ACTIVE: jwt
 
     ports:
       - "8081:8081"

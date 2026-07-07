@@ -1,0 +1,48 @@
+diff -ruN enterprise-user-api-main/docker-compose.yml fixed/docker-compose.yml
+--- enterprise-user-api-main/docker-compose.yml	2026-07-06 17:33:31.000000000 +0000
++++ fixed/docker-compose.yml	2026-07-07 02:36:21.758233855 +0000
+@@ -30,6 +30,7 @@
+       DB_USERNAME: postgres
+       DB_PASSWORD: postgres
+       AUTH_TYPE: jwt
++      SPRING_PROFILES_ACTIVE: jwt
+ 
+     ports:
+       - "8081:8081"
+diff -ruN enterprise-user-api-main/src/main/resources/application-basic.properties fixed/src/main/resources/application-basic.properties
+--- enterprise-user-api-main/src/main/resources/application-basic.properties	1970-01-01 00:00:00.000000000 +0000
++++ fixed/src/main/resources/application-basic.properties	2026-07-07 02:36:20.158300293 +0000
+@@ -0,0 +1 @@
++spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
+diff -ruN enterprise-user-api-main/src/main/resources/application-jwt.properties fixed/src/main/resources/application-jwt.properties
+--- enterprise-user-api-main/src/main/resources/application-jwt.properties	1970-01-01 00:00:00.000000000 +0000
++++ fixed/src/main/resources/application-jwt.properties	2026-07-07 02:36:20.148726218 +0000
+@@ -0,0 +1 @@
++spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
+diff -ruN enterprise-user-api-main/src/main/resources/application.properties fixed/src/main/resources/application.properties
+--- enterprise-user-api-main/src/main/resources/application.properties	2026-07-06 17:33:31.000000000 +0000
++++ fixed/src/main/resources/application.properties	2026-07-07 02:36:20.138175886 +0000
+@@ -21,6 +21,7 @@
+ spring.jpa.hibernate.ddl-auto=update
+ spring.jpa.show-sql=true
+ spring.jpa.properties.hibernate.format_sql=true
++spring.jpa.open-in-view=false
+ 
+ # ===============================
+ # Security
+@@ -28,11 +29,11 @@
+ app.security.mode=${AUTH_TYPE:jwt}
+ 
+ # ===============================
+-# OAuth2 - Google
++# JWT
+ # ===============================
+-#spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID:}
+-#spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET:}
+-#spring.security.oauth2.client.registration.google.scope=openid,email,profile
++app.jwt.secret=${JWT_SECRET:ThisIsASecretKeyForJwtTokenGenerationThisIsASecretKey12345}
++app.jwt.expiration-ms=${JWT_EXPIRATION_MS:3600000}
++app.jwt.refresh-expiration-ms=${JWT_REFRESH_EXPIRATION_MS:86400000}
+ 
+ # ===============================
+ # Actuator
