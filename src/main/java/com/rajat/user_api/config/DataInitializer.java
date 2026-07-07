@@ -17,6 +17,20 @@ public class DataInitializer {
     private static final String DEFAULT_ADMIN_PASSWORD = "rajat123";
     private static final String DEFAULT_CLIENT_ID = "rest-assured-client";
     private static final String DEFAULT_CLIENT_SECRET = "secret123";
+    private static final String TEST_USER_PASSWORD = "Password@123";
+    private static final int REQUIRED_TEST_USERS = 150;
+
+    private static final String[] FIRST_NAMES = {
+            "Aarav", "Vivaan", "Aditya", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan", "Shaurya",
+            "Ananya", "Diya", "Aadhya", "Avni", "Myra", "Isha", "Anika", "Saanvi", "Kavya", "Meera",
+            "Rohan", "Rahul", "Karan", "Nikhil", "Varun", "Siddharth", "Kabir", "Aryan", "Yash", "Dev",
+            "Priya", "Neha", "Sneha", "Pooja", "Riya", "Nisha", "Shreya", "Tanvi", "Aditi", "Kriti"
+    };
+
+    private static final String[] LAST_NAMES = {
+            "Sharma", "Verma", "Gupta", "Singh", "Patel", "Mehta", "Mishra", "Kapoor", "Jain", "Malhotra",
+            "Reddy", "Nair", "Iyer", "Rao", "Kumar", "Chopra", "Bansal", "Agarwal", "Joshi", "Saxena"
+    };
 
     @Bean
     CommandLineRunner seedDefaultData(UserRepository userRepository,
@@ -26,6 +40,7 @@ public class DataInitializer {
         return args -> {
             seedDefaultAdminUser(userRepository, passwordEncoder);
             seedDefaultRestAssuredClient(oAuthClientRepository, passwordEncoder);
+            seedEnterpriseTestUsers(userRepository, passwordEncoder);
         };
     }
 
@@ -59,5 +74,55 @@ public class DataInitializer {
         client.setActive(true);
 
         oAuthClientRepository.save(client);
+    }
+
+    private void seedEnterpriseTestUsers(UserRepository userRepository,
+                                         PasswordEncoder passwordEncoder) {
+
+        long existingSeedUsers = userRepository.findAll().stream()
+                .filter(user -> user.getUsername() != null && user.getUsername().startsWith("seed."))
+                .count();
+
+        if (existingSeedUsers >= REQUIRED_TEST_USERS) {
+            return;
+        }
+
+        for (int i = 1; i <= REQUIRED_TEST_USERS; i++) {
+            String firstName = FIRST_NAMES[(i - 1) % FIRST_NAMES.length];
+            String lastName = LAST_NAMES[(i - 1) % LAST_NAMES.length];
+            String username = buildUsername(firstName, lastName, i);
+
+            if (userRepository.findByUsername(username).isPresent()) {
+                continue;
+            }
+
+            User user = new User();
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user.setUsername(username);
+            user.setEmail(username + "@enterprise.test");
+            user.setAge(21 + (i % 35));
+            user.setIsActive(i % 10 != 0);
+            user.setRole(resolveRole(i));
+            user.setPassword(passwordEncoder.encode(TEST_USER_PASSWORD));
+
+            userRepository.save(user);
+        }
+    }
+
+    private String buildUsername(String firstName, String lastName, int sequence) {
+        return "seed." + firstName.toLowerCase() + "." + lastName.toLowerCase() + "." + sequence;
+    }
+
+    private String resolveRole(int sequence) {
+        if (sequence <= 8) {
+            return "ROLE_ADMIN";
+        }
+
+        if (sequence <= 30) {
+            return "ROLE_MANAGER";
+        }
+
+        return "ROLE_USER";
     }
 }
