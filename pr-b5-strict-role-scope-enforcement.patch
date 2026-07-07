@@ -1,0 +1,189 @@
+diff --git a/src/main/java/com/rajat/user_api/config/DataInitializer.java b/src/main/java/com/rajat/user_api/config/DataInitializer.java
+index d6e3f36..c41c8bb 100644
+--- a/src/main/java/com/rajat/user_api/config/DataInitializer.java
++++ b/src/main/java/com/rajat/user_api/config/DataInitializer.java
+@@ -70,7 +70,7 @@ public class DataInitializer {
+ 
+         client.setClientId(DEFAULT_CLIENT_ID);
+         client.setClientSecret(passwordEncoder.encode(DEFAULT_CLIENT_SECRET));
+-        client.setScopes("users:read,users:write");
++        client.setScopes("automation:read,automation:write");
+         client.setActive(true);
+ 
+         oAuthClientRepository.save(client);
+diff --git a/src/main/java/com/rajat/user_api/controller/UserController.java b/src/main/java/com/rajat/user_api/controller/UserController.java
+index 3205135..45fc336 100644
+--- a/src/main/java/com/rajat/user_api/controller/UserController.java
++++ b/src/main/java/com/rajat/user_api/controller/UserController.java
+@@ -85,7 +85,7 @@ public class UserController {
+                       "isActive": true
+                     }
+                     """)))
+-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
++    @PreAuthorize("hasRole('ADMIN')")
+     @PostMapping
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> createUser(@Valid @RequestBody UserRequest request) {
+         UserResponse savedUser = userService.saveUser(request);
+@@ -125,7 +125,7 @@ public class UserController {
+                             }
+                             """)))
+     })
+-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
++    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+     @GetMapping
+     public ResponseEntity<PagedResponse<List<UserResponse>>> getUsers(
+             @Parameter(description = "Filter by first name", example = "raj")
+@@ -179,7 +179,7 @@ public class UserController {
+                             }
+                             """)))
+     })
+-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
++    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+     @GetMapping("/{id}")
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> getUserById(
+             @Parameter(description = "User ID", example = "1")
+@@ -195,7 +195,7 @@ public class UserController {
+             @ApiResponse(responseCode = "200", description = "User fetched successfully"),
+             @ApiResponse(responseCode = "404", description = "User not found")
+     })
+-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
++    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+     @GetMapping("/search")
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> getUserByEmail(
+             @Parameter(description = "User email", example = "rajat2496@gmail.com", required = true)
+@@ -225,7 +225,7 @@ public class UserController {
+                       "isActive": true
+                     }
+                     """)))
+-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
++    @PreAuthorize("hasRole('ADMIN')")
+     @PutMapping("/{id}")
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> updateUser(
+             @Parameter(description = "User ID", example = "1")
+@@ -251,7 +251,7 @@ public class UserController {
+                       "email": "rajat.patch@gmail.com"
+                     }
+                     """)))
+-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
++    @PreAuthorize("hasRole('ADMIN')")
+     @PatchMapping("/{id}")
+     public ResponseEntity<ApiSuccessResponse<UserResponse>> patchUser(
+             @Parameter(description = "User ID", example = "1")
+@@ -268,7 +268,7 @@ public class UserController {
+             @ApiResponse(responseCode = "204", description = "User soft deleted successfully"),
+             @ApiResponse(responseCode = "404", description = "User not found")
+     })
+-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
++    @PreAuthorize("hasRole('ADMIN')")
+     @DeleteMapping("/{id}")
+     public ResponseEntity<Void> deleteUser(
+             @Parameter(description = "User ID", example = "1")
+diff --git a/src/main/java/com/rajat/user_api/security/filter/JwtAuthenticationFilter.java b/src/main/java/com/rajat/user_api/security/filter/JwtAuthenticationFilter.java
+index 2b48635..a335cb8 100644
+--- a/src/main/java/com/rajat/user_api/security/filter/JwtAuthenticationFilter.java
++++ b/src/main/java/com/rajat/user_api/security/filter/JwtAuthenticationFilter.java
+@@ -60,9 +60,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
+ 
+         if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+ 
+-            UsernamePasswordAuthenticationToken authenticationToken = jwtService.isClientToken(token)
+-                    ? buildClientAuthentication(token, subject)
+-                    : buildUserAuthentication(token, subject);
++            UsernamePasswordAuthenticationToken authenticationToken = null;
++
++            if (jwtService.isUserAccessToken(token)) {
++                authenticationToken = buildUserAuthentication(token, subject);
++            } else if (jwtService.isClientAccessToken(token)) {
++                authenticationToken = buildClientAuthentication(token, subject);
++            }
+ 
+             if (authenticationToken != null) {
+                 authenticationToken.setDetails(
+@@ -101,6 +105,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
+                 .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope))
+                 .toList();
+ 
++        authorities = new java.util.ArrayList<>(authorities);
++        authorities.add(new SimpleGrantedAuthority("ROLE_CLIENT"));
++
+         return new UsernamePasswordAuthenticationToken(
+                 clientId,
+                 null,
+diff --git a/src/main/java/com/rajat/user_api/security/jwt/JwtService.java b/src/main/java/com/rajat/user_api/security/jwt/JwtService.java
+index aaeee18..af1f7f7 100644
+--- a/src/main/java/com/rajat/user_api/security/jwt/JwtService.java
++++ b/src/main/java/com/rajat/user_api/security/jwt/JwtService.java
+@@ -15,8 +15,11 @@ import io.jsonwebtoken.security.Keys;
+ public class JwtService {
+ 
+     private static final String TOKEN_TYPE_CLAIM = "token_type";
++    private static final String TOKEN_USE_CLAIM = "token_use";
+     private static final String CLIENT_TOKEN_TYPE = "client";
+     private static final String USER_TOKEN_TYPE = "user";
++    private static final String ACCESS_TOKEN_USE = "access";
++    private static final String REFRESH_TOKEN_USE = "refresh";
+     private static final String SCOPES_CLAIM = "scopes";
+ 
+     private final JwtProperties jwtProperties;
+@@ -34,6 +37,7 @@ public class JwtService {
+         return Jwts.builder()
+                 .subject(username)
+                 .claim(TOKEN_TYPE_CLAIM, USER_TOKEN_TYPE)
++                .claim(TOKEN_USE_CLAIM, ACCESS_TOKEN_USE)
+                 .issuedAt(new Date())
+                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpirationMs()))
+                 .signWith(getSigningKey())
+@@ -44,6 +48,7 @@ public class JwtService {
+         return Jwts.builder()
+                 .subject(clientId)
+                 .claim(TOKEN_TYPE_CLAIM, CLIENT_TOKEN_TYPE)
++                .claim(TOKEN_USE_CLAIM, ACCESS_TOKEN_USE)
+                 .claim(SCOPES_CLAIM, scopes)
+                 .issuedAt(new Date())
+                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpirationMs()))
+@@ -55,6 +60,7 @@ public class JwtService {
+         return Jwts.builder()
+                 .subject(username)
+                 .claim(TOKEN_TYPE_CLAIM, USER_TOKEN_TYPE)
++                .claim(TOKEN_USE_CLAIM, REFRESH_TOKEN_USE)
+                 .issuedAt(new Date())
+                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshExpirationMs()))
+                 .signWith(getSigningKey())
+@@ -70,8 +76,22 @@ public class JwtService {
+                 && !isTokenExpired(token);
+     }
+ 
+-    public boolean isClientToken(String token) {
+-        return CLIENT_TOKEN_TYPE.equals(extractClaims(token).get(TOKEN_TYPE_CLAIM, String.class));
++    public boolean isUserAccessToken(String token) {
++        Claims claims = extractClaims(token);
++        return USER_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class))
++                && ACCESS_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
++    }
++
++    public boolean isClientAccessToken(String token) {
++        Claims claims = extractClaims(token);
++        return CLIENT_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class))
++                && ACCESS_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
++    }
++
++    public boolean isRefreshToken(String token) {
++        Claims claims = extractClaims(token);
++        return USER_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class))
++                && REFRESH_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
+     }
+ 
+     @SuppressWarnings("unchecked")
+diff --git a/src/main/java/com/rajat/user_api/security/service/AuthService.java b/src/main/java/com/rajat/user_api/security/service/AuthService.java
+index d2ec250..e45c501 100644
+--- a/src/main/java/com/rajat/user_api/security/service/AuthService.java
++++ b/src/main/java/com/rajat/user_api/security/service/AuthService.java
+@@ -82,7 +82,7 @@ public class AuthService {
+ 
+         String username = jwtService.extractUsername(refreshToken);
+ 
+-        if (!jwtService.isTokenValid(refreshToken, username)) {
++        if (!jwtService.isRefreshToken(refreshToken) || !jwtService.isTokenValid(refreshToken, username)) {
+             throw new BadCredentialsException("Invalid refresh token");
+         }
+ 

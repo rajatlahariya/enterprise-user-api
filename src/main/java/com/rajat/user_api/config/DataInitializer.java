@@ -70,7 +70,7 @@ public class DataInitializer {
 
         client.setClientId(DEFAULT_CLIENT_ID);
         client.setClientSecret(passwordEncoder.encode(DEFAULT_CLIENT_SECRET));
-        client.setScopes("users:read,users:write");
+        client.setScopes("automation:read,automation:write");
         client.setActive(true);
 
         oAuthClientRepository.save(client);

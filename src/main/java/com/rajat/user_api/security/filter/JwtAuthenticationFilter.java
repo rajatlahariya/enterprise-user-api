@@ -60,9 +60,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UsernamePasswordAuthenticationToken authenticationToken = jwtService.isClientToken(token)
-                    ? buildClientAuthentication(token, subject)
-                    : buildUserAuthentication(token, subject);
+            UsernamePasswordAuthenticationToken authenticationToken = null;
+
+            if (jwtService.isUserAccessToken(token)) {
+                authenticationToken = buildUserAuthentication(token, subject);
+            } else if (jwtService.isClientAccessToken(token)) {
+                authenticationToken = buildClientAuthentication(token, subject);
+            }
 
             if (authenticationToken != null) {
                 authenticationToken.setDetails(
@@ -100,6 +104,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         List<SimpleGrantedAuthority> authorities = jwtService.extractScopes(token).stream()
                 .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope))
                 .toList();
+
+        authorities = new java.util.ArrayList<>(authorities);
+        authorities.add(new SimpleGrantedAuthority("ROLE_CLIENT"));
 
         return new UsernamePasswordAuthenticationToken(
                 clientId,

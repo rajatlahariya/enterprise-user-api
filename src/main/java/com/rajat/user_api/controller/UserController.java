@@ -85,7 +85,7 @@ public class UserController {
                       "isActive": true
                     }
                     """)))
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiSuccessResponse<UserResponse>> createUser(@Valid @RequestBody UserRequest request) {
         UserResponse savedUser = userService.saveUser(request);
@@ -125,7 +125,7 @@ public class UserController {
                             }
                             """)))
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping
     public ResponseEntity<PagedResponse<List<UserResponse>>> getUsers(
             @Parameter(description = "Filter by first name", example = "raj")
@@ -179,7 +179,7 @@ public class UserController {
                             }
                             """)))
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiSuccessResponse<UserResponse>> getUserById(
             @Parameter(description = "User ID", example = "1")
@@ -195,7 +195,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User fetched successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('SCOPE_users:read')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/search")
     public ResponseEntity<ApiSuccessResponse<UserResponse>> getUserByEmail(
             @Parameter(description = "User email", example = "rajat2496@gmail.com", required = true)
@@ -225,7 +225,7 @@ public class UserController {
                       "isActive": true
                     }
                     """)))
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiSuccessResponse<UserResponse>> updateUser(
             @Parameter(description = "User ID", example = "1")
@@ -251,7 +251,7 @@ public class UserController {
                       "email": "rajat.patch@gmail.com"
                     }
                     """)))
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<ApiSuccessResponse<UserResponse>> patchUser(
             @Parameter(description = "User ID", example = "1")
@@ -268,7 +268,7 @@ public class UserController {
             @ApiResponse(responseCode = "204", description = "User soft deleted successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SCOPE_users:write')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "User ID", example = "1")

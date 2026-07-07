@@ -15,8 +15,11 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
 
     private static final String TOKEN_TYPE_CLAIM = "token_type";
+    private static final String TOKEN_USE_CLAIM = "token_use";
     private static final String CLIENT_TOKEN_TYPE = "client";
     private static final String USER_TOKEN_TYPE = "user";
+    private static final String ACCESS_TOKEN_USE = "access";
+    private static final String REFRESH_TOKEN_USE = "refresh";
     private static final String SCOPES_CLAIM = "scopes";
 
     private final JwtProperties jwtProperties;
@@ -34,6 +37,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(username)
                 .claim(TOKEN_TYPE_CLAIM, USER_TOKEN_TYPE)
+                .claim(TOKEN_USE_CLAIM, ACCESS_TOKEN_USE)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpirationMs()))
                 .signWith(getSigningKey())
@@ -44,6 +48,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(clientId)
                 .claim(TOKEN_TYPE_CLAIM, CLIENT_TOKEN_TYPE)
+                .claim(TOKEN_USE_CLAIM, ACCESS_TOKEN_USE)
                 .claim(SCOPES_CLAIM, scopes)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpirationMs()))
@@ -55,6 +60,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(username)
                 .claim(TOKEN_TYPE_CLAIM, USER_TOKEN_TYPE)
+                .claim(TOKEN_USE_CLAIM, REFRESH_TOKEN_USE)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshExpirationMs()))
                 .signWith(getSigningKey())
@@ -70,8 +76,22 @@ public class JwtService {
                 && !isTokenExpired(token);
     }
 
-    public boolean isClientToken(String token) {
-        return CLIENT_TOKEN_TYPE.equals(extractClaims(token).get(TOKEN_TYPE_CLAIM, String.class));
+    public boolean isUserAccessToken(String token) {
+        Claims claims = extractClaims(token);
+        return USER_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class))
+                && ACCESS_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
+    }
+
+    public boolean isClientAccessToken(String token) {
+        Claims claims = extractClaims(token);
+        return CLIENT_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class))
+                && ACCESS_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
+    }
+
+    public boolean isRefreshToken(String token) {
+        Claims claims = extractClaims(token);
+        return USER_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class))
+                && REFRESH_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
     }
 
     @SuppressWarnings("unchecked")

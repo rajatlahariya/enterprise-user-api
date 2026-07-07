@@ -82,7 +82,7 @@ public class AuthService {
 
         String username = jwtService.extractUsername(refreshToken);
 
-        if (!jwtService.isTokenValid(refreshToken, username)) {
+        if (!jwtService.isRefreshToken(refreshToken) || !jwtService.isTokenValid(refreshToken, username)) {
             throw new BadCredentialsException("Invalid refresh token");
         }
 
