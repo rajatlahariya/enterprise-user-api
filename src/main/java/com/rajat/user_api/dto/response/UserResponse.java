@@ -19,18 +19,18 @@ public class UserResponse {
 	
 	@Schema(
 		    description = "User first name",
-		    example = "Rajat"
+		    example = "Aarav"
 		)
 		private String firstName;    
 	
 	@Schema(
 		    description = "User last name",
-		    example = "Lahariya"
+		    example = "Sharma"
 		)
        private String lastName;
 	@Schema(
 		    description = "User email address",
-		    example = "rajat2496@gmail.com"
+		    example = "demo.user@example.test"
 		)
 		private String email;
 	@Schema(

@@ -50,9 +50,9 @@ public class DataInitializer {
         User user = userRepository.findByUsername(DEFAULT_ADMIN_USERNAME)
                 .orElseGet(User::new);
 
-        user.setFirstName("Rajat");
-        user.setLastName("Lahariya");
-        user.setEmail("rajat2496@gmail.com");
+        user.setFirstName("Aarav");
+        user.setLastName("Sharma");
+        user.setEmail("demo.user@example.test");
         user.setAge(29);
         user.setIsActive(true);
         user.setUsername(DEFAULT_ADMIN_USERNAME);

@@ -50,9 +50,9 @@ public class UserController {
                               "message": "User created successfully",
                               "data": {
                                 "id": 101,
-                                "firstName": "Rajat",
-                                "lastName": "Lahariya",
-                                "email": "rajat2496@gmail.com",
+                                "firstName": "Aarav",
+                                "lastName": "Sharma",
+                                "email": "demo.user@example.test",
                                 "age": 29,
                                 "isActive": true,
                                 "createdAt": "2026-07-05T18:00:00"
@@ -78,9 +78,9 @@ public class UserController {
             content = @Content(mediaType = "application/json",
                     examples = @ExampleObject(value = """
                     {
-                      "firstName": "Rajat",
-                      "lastName": "Lahariya",
-                      "email": "rajat2496@gmail.com",
+                      "firstName": "Aarav",
+                      "lastName": "Sharma",
+                      "email": "demo.user@example.test",
                       "age": 29,
                       "isActive": true
                     }
@@ -106,9 +106,9 @@ public class UserController {
                               "data": [
                                 {
                                   "id": 1,
-                                  "firstName": "Rajat",
-                                  "lastName": "Lahariya",
-                                  "email": "rajat2496@gmail.com",
+                                  "firstName": "Aarav",
+                                  "lastName": "Sharma",
+                                  "email": "demo.user@example.test",
                                   "age": 29,
                                   "isActive": true,
                                   "createdAt": "2026-07-05T18:00:00"
@@ -198,7 +198,7 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/search")
     public ResponseEntity<ApiSuccessResponse<UserResponse>> getUserByEmail(
-            @Parameter(description = "User email", example = "rajat2496@gmail.com", required = true)
+            @Parameter(description = "User email", example = "demo.user@example.test", required = true)
             @RequestParam String email) {
 
         return ResponseEntity.ok(
@@ -218,9 +218,9 @@ public class UserController {
             content = @Content(mediaType = "application/json",
                     examples = @ExampleObject(value = """
                     {
-                      "firstName": "Rajat",
-                      "lastName": "Lahariya",
-                      "email": "rajat.updated@gmail.com",
+                      "firstName": "Aarav",
+                      "lastName": "Sharma",
+                      "email": "aarav.sharma.updated@example.test",
                       "age": 30,
                       "isActive": true
                     }
@@ -248,7 +248,7 @@ public class UserController {
             content = @Content(mediaType = "application/json",
                     examples = @ExampleObject(value = """
                     {
-                      "email": "rajat.patch@gmail.com"
+                      "email": "aarav.sharma.patch@example.test"
                     }
                     """)))
     @PreAuthorize("hasRole('ADMIN')")

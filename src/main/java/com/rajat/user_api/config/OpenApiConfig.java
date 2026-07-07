@@ -24,8 +24,8 @@ public class OpenApiConfig {
 	                    .version("1.0.0")
 	                    .description("Production-ready Spring Boot REST API built for enterprise SDET practice.")
 	                    .contact(new Contact()
-	                            .name("Rajat Lahariya")
-	                            .email("rajat2496@gmail.com"))
+	                            .name("Demo Maintainer")
+	                            .email("demo.user@example.test"))
 	                    .license(new License()
 	                            .name("MIT License")))
 	            .tags(List.of(
@@ -44,7 +44,7 @@ public class OpenApiConfig {
 	            .externalDocs(
 	            	    new ExternalDocumentation()
 	            	            .description("GitHub Repository")
-	            	            .url("https://github.com/rajat2496/user-api")
+	            	            .url("https://github.com/rajatlahariya/enterprise-user-api")
 	            	)
 	            ;
 	}
