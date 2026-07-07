@@ -13,7 +13,7 @@ pipeline {
         DB_USERNAME = 'postgres'
         DB_PASSWORD = 'postgres'
         GOOGLE_CLIENT_ID = credentials('google-client-id')
-		GOOGLE_CLIENT_SECRET = credentials('google-client-secret')
+        GOOGLE_CLIENT_SECRET = credentials('google-client-secret')
     }
 
     stages {
@@ -44,7 +44,7 @@ pipeline {
                   -e AUTH_TYPE=$AUTH_TYPE \
                   -e SPRING_PROFILES_ACTIVE=$AUTH_TYPE \
                   -e GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
-					-e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
+                  -e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
                   $IMAGE_NAME
                 '''
             }
@@ -54,8 +54,21 @@ pipeline {
             steps {
                 sh '''
                 echo "Waiting for application..."
-                sleep 20
-                curl -f http://enterprise-user-api:8081/actuator/health
+
+                for i in $(seq 1 24)
+                do
+                  if curl -fs http://enterprise-user-api:8081/actuator/health; then
+                    echo "Application is UP"
+                    exit 0
+                  fi
+
+                  echo "Health check attempt $i failed. Retrying..."
+                  sleep 5
+                done
+
+                echo "Application failed health check. Printing container logs."
+                docker logs enterprise-user-api || true
+                exit 1
                 '''
             }
         }

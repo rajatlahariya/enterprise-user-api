@@ -43,3 +43,4 @@ volumes:
 
 networks:
   enterprise-user-api-network:
+    name: user-api_enterprise-user-api-network

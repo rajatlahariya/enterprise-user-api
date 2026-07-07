@@ -1,7 +1,10 @@
 package com.rajat.user_api.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.rajat.user_api.dto.request.LoginRequest;
 import com.rajat.user_api.dto.request.RefreshTokenRequest;
@@ -18,10 +21,6 @@ public class AuthController {
 
     public AuthController(AuthService authService) {
         this.authService = authService;
-    }
-    @GetMapping("/ping")
-    public ResponseEntity<String> ping() {
-        return ResponseEntity.ok("AUTH CONTROLLER HIT");
     }
 
     @PostMapping("/login")
