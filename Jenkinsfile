@@ -76,31 +76,11 @@ pipeline {
         stage('Smoke Test') {
             steps {
                 sh '''
-                echo "Running smoke test for AUTH_TYPE=$AUTH_TYPE"
-
-                case "$AUTH_TYPE" in
-                  jwt)
-                    curl -fs -X POST http://enterprise-user-api:8081/auth/login \
-                      -H "Content-Type: application/json" \
-                      -d '{"username":"rajat","password":"rajat123"}' | grep -q "accessToken"
-                    echo "JWT login smoke test passed"
-                    ;;
-
-                  basic)
-                    curl -fs -u rajat:rajat123 http://enterprise-user-api:8081/users?size=1 > /dev/null
-                    echo "Basic protected endpoint smoke test passed"
-                    ;;
-
-                  oauth2)
-                    curl -fs -o /dev/null http://enterprise-user-api:8081/oauth2/authorization/google
-                    echo "OAuth2 authorization endpoint smoke test passed"
-                    ;;
-
-                  *)
-                    echo "Unsupported AUTH_TYPE=$AUTH_TYPE"
-                    exit 1
-                    ;;
-                esac
+                BASE_URL=http://enterprise-user-api:8081 \
+                AUTH_TYPE=$AUTH_TYPE \
+                SMOKE_USERNAME=rajat \
+                SMOKE_PASSWORD=rajat123 \
+                ./scripts/smoke-test.sh
                 '''
             }
         }

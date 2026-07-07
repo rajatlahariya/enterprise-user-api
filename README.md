@@ -99,7 +99,26 @@ GitHub → Jenkins → Build JAR → Build Docker Image → Deploy Container →
 
 The pipeline runs a smoke test based on the selected `AUTH_TYPE`.
 
+
+## Local Smoke Script
+
+After the application is running, use the reusable smoke script:
+
+```bash
+AUTH_TYPE=jwt BASE_URL=http://localhost:8081 ./scripts/smoke-test.sh
+AUTH_TYPE=basic BASE_URL=http://localhost:8081 ./scripts/smoke-test.sh
+AUTH_TYPE=oauth2 BASE_URL=http://localhost:8081 ./scripts/smoke-test.sh
+```
+
+## v1.0 Release
+
+Before tagging the project, follow the [v1.0 Release Checklist](docs/release-checklist.md).
+
+After `v1.0-auth-cicd`, development switches to the SDET phase documented in [SDET Transition Plan](docs/sdet-transition.md).
+
 ## Documentation
 
 - [Architecture](docs/architecture.md)
 - [Phase A Checkpoints](docs/checkpoints.md)
+- [v1.0 Release Checklist](docs/release-checklist.md)
+- [SDET Transition Plan](docs/sdet-transition.md)
