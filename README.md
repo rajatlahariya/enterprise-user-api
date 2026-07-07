@@ -2,6 +2,23 @@
 
 Spring Boot REST API with PostgreSQL, JWT, Basic Authentication, Google OAuth2, Docker, and Jenkins CI/CD.
 
+This repository is being prepared as an interview-ready Senior SDET / Automation Architect portfolio project.
+
+## Tech Stack
+
+- Java 21
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- PostgreSQL
+- JWT
+- Google OAuth2
+- Docker
+- Docker Compose
+- Jenkins Pipeline
+- Swagger / OpenAPI
+- Actuator
+
 ## Authentication Modes
 
 | AUTH_TYPE | Spring profile | Description |
@@ -10,7 +27,9 @@ Spring Boot REST API with PostgreSQL, JWT, Basic Authentication, Google OAuth2, 
 | `basic` | `basic` | HTTP Basic authentication using database user details |
 | `oauth2` | `oauth2` | Google OAuth2 login |
 
-## Required runtime variables
+`AUTH_TYPE` and `SPRING_PROFILES_ACTIVE` must always match.
+
+## Runtime Variables
 
 Common variables:
 
@@ -29,7 +48,7 @@ GOOGLE_CLIENT_ID=<google-client-id>
 GOOGLE_CLIENT_SECRET=<google-client-secret>
 ```
 
-## Local Docker run
+## Local Docker Run
 
 ```bash
 docker run -d \
@@ -44,17 +63,43 @@ docker run -d \
   enterprise-user-api:latest
 ```
 
-## Smoke checks
+## Smoke Checks
+
+Health:
 
 ```bash
 curl -i http://localhost:8081/actuator/health
+```
+
+JWT login:
+
+```bash
 curl -i -X POST http://localhost:8081/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"rajat","password":"rajat123"}'
 ```
 
-## CI/CD flow
+Basic protected endpoint:
+
+```bash
+curl -i -u rajat:rajat123 http://localhost:8081/users?size=1
+```
+
+OAuth2 authorization entrypoint:
+
+```bash
+curl -i http://localhost:8081/oauth2/authorization/google
+```
+
+## Jenkins CI/CD Flow
 
 ```text
-GitHub → Jenkins → Build JAR → Build Docker image → Deploy container → Health check
+GitHub → Jenkins → Build JAR → Build Docker Image → Deploy Container → Health Check → Smoke Test
 ```
+
+The pipeline runs a smoke test based on the selected `AUTH_TYPE`.
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [Phase A Checkpoints](docs/checkpoints.md)

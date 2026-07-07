@@ -29,14 +29,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher(
-                    "/auth/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/actuator/health",
-                    "/actuator/info"
-            )
+            .securityMatcher(PublicEndpoints.PERMIT_ALL)
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                     .anyRequest().permitAll()

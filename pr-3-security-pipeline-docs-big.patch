@@ -1,0 +1,350 @@
+diff --git a/Jenkinsfile b/Jenkinsfile
+index 17f1878..10351da 100644
+--- a/Jenkinsfile
++++ b/Jenkinsfile
+@@ -72,6 +72,38 @@ pipeline {
+                 '''
+             }
+         }
++
++        stage('Smoke Test') {
++            steps {
++                sh '''
++                echo "Running smoke test for AUTH_TYPE=$AUTH_TYPE"
++
++                case "$AUTH_TYPE" in
++                  jwt)
++                    curl -fs -X POST http://enterprise-user-api:8081/auth/login \
++                      -H "Content-Type: application/json" \
++                      -d '{"username":"rajat","password":"rajat123"}' | grep -q "accessToken"
++                    echo "JWT login smoke test passed"
++                    ;;
++
++                  basic)
++                    curl -fs -u rajat:rajat123 http://enterprise-user-api:8081/users?size=1 > /dev/null
++                    echo "Basic protected endpoint smoke test passed"
++                    ;;
++
++                  oauth2)
++                    curl -fs -o /dev/null http://enterprise-user-api:8081/oauth2/authorization/google
++                    echo "OAuth2 authorization endpoint smoke test passed"
++                    ;;
++
++                  *)
++                    echo "Unsupported AUTH_TYPE=$AUTH_TYPE"
++                    exit 1
++                    ;;
++                esac
++                '''
++            }
++        }
+     }
+ 
+     post {
+diff --git a/README.md b/README.md
+index 7eb127d..3568af3 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,23 @@
+ 
+ Spring Boot REST API with PostgreSQL, JWT, Basic Authentication, Google OAuth2, Docker, and Jenkins CI/CD.
+ 
++This repository is being prepared as an interview-ready Senior SDET / Automation Architect portfolio project.
++
++## Tech Stack
++
++- Java 21
++- Spring Boot
++- Spring Security
++- Spring Data JPA
++- PostgreSQL
++- JWT
++- Google OAuth2
++- Docker
++- Docker Compose
++- Jenkins Pipeline
++- Swagger / OpenAPI
++- Actuator
++
+ ## Authentication Modes
+ 
+ | AUTH_TYPE | Spring profile | Description |
+@@ -10,7 +27,9 @@ Spring Boot REST API with PostgreSQL, JWT, Basic Authentication, Google OAuth2,
+ | `basic` | `basic` | HTTP Basic authentication using database user details |
+ | `oauth2` | `oauth2` | Google OAuth2 login |
+ 
+-## Required runtime variables
++`AUTH_TYPE` and `SPRING_PROFILES_ACTIVE` must always match.
++
++## Runtime Variables
+ 
+ Common variables:
+ 
+@@ -29,7 +48,7 @@ GOOGLE_CLIENT_ID=<google-client-id>
+ GOOGLE_CLIENT_SECRET=<google-client-secret>
+ ```
+ 
+-## Local Docker run
++## Local Docker Run
+ 
+ ```bash
+ docker run -d \
+@@ -44,17 +63,43 @@ docker run -d \
+   enterprise-user-api:latest
+ ```
+ 
+-## Smoke checks
++## Smoke Checks
++
++Health:
+ 
+ ```bash
+ curl -i http://localhost:8081/actuator/health
++```
++
++JWT login:
++
++```bash
+ curl -i -X POST http://localhost:8081/auth/login \
+   -H "Content-Type: application/json" \
+   -d '{"username":"rajat","password":"rajat123"}'
+ ```
+ 
+-## CI/CD flow
++Basic protected endpoint:
++
++```bash
++curl -i -u rajat:rajat123 http://localhost:8081/users?size=1
++```
++
++OAuth2 authorization entrypoint:
++
++```bash
++curl -i http://localhost:8081/oauth2/authorization/google
++```
++
++## Jenkins CI/CD Flow
+ 
+ ```text
+-GitHub → Jenkins → Build JAR → Build Docker image → Deploy container → Health check
++GitHub → Jenkins → Build JAR → Build Docker Image → Deploy Container → Health Check → Smoke Test
+ ```
++
++The pipeline runs a smoke test based on the selected `AUTH_TYPE`.
++
++## Documentation
++
++- [Architecture](docs/architecture.md)
++- [Phase A Checkpoints](docs/checkpoints.md)
+diff --git a/docs/architecture.md b/docs/architecture.md
+new file mode 100644
+index 0000000..c9bf34a
+--- /dev/null
++++ b/docs/architecture.md
+@@ -0,0 +1,57 @@
++# Architecture
++
++## Runtime flow
++
++```text
++Client
++  |
++  v
++Spring Boot API
++  |
++  +-- Public endpoints: /auth/**, /swagger-ui/**, /v3/api-docs/**, /actuator/health, /actuator/info
++  |
++  +-- Protected endpoints: /users/**
++  |
++  v
++PostgreSQL
++```
++
++## Authentication modes
++
++The application uses a strategy-based security design selected at runtime.
++
++| Mode | Spring profile | Strategy class | Purpose |
++|---|---|---|---|
++| `jwt` | `jwt` | `JwtAuthenticationStrategy` | Token-based API authentication |
++| `basic` | `basic` | `BasicAuthenticationStrategy` | HTTP Basic authentication using DB users |
++| `oauth2` | `oauth2` | `OAuth2AuthenticationStrategy` | Google OAuth2 login |
++
++## Profile rule
++
++`AUTH_TYPE` and `SPRING_PROFILES_ACTIVE` must have the same value.
++
++Examples:
++
++```text
++AUTH_TYPE=jwt     SPRING_PROFILES_ACTIVE=jwt
++AUTH_TYPE=basic   SPRING_PROFILES_ACTIVE=basic
++AUTH_TYPE=oauth2  SPRING_PROFILES_ACTIVE=oauth2
++```
++
++OAuth2 Google client properties are loaded only from `application-oauth2.properties`.
++JWT and Basic profiles explicitly exclude OAuth2 client auto-configuration.
++
++## CI/CD flow
++
++```text
++GitHub
++  |
++  v
++Jenkins Pipeline
++  |
++  +-- Build Jar
++  +-- Build Docker Image
++  +-- Deploy Container
++  +-- Health Check
++  +-- Smoke Test based on AUTH_TYPE
++```
+diff --git a/docs/checkpoints.md b/docs/checkpoints.md
+new file mode 100644
+index 0000000..6225975
+--- /dev/null
++++ b/docs/checkpoints.md
+@@ -0,0 +1,20 @@
++# Phase A Checkpoints
++
++## Completed
++
++- Checkpoint 0: Working JWT, Basic, OAuth2 CI/CD version tagged/saved.
++- Checkpoint 1: Configuration cleanup completed.
++- Checkpoint 2: Debug and temporary console cleanup completed.
++- Checkpoint 3: OAuth2 profile isolation fixed; JWT app starts without Google credentials.
++- Checkpoint 4: Docker and Jenkins deployment stabilized.
++
++## In this PR
++
++- Checkpoint 5: Public endpoints centralized in one place.
++- Checkpoint 6: Jenkins now performs AUTH_TYPE-specific smoke tests after deployment.
++
++## Remaining before SDET mode
++
++- Checkpoint 7: Verify all three modes from Jenkins: `jwt`, `basic`, `oauth2`.
++- Checkpoint 8: Final README polish and v1.0 tag.
++- Checkpoint 9: Create separate `enterprise-api-tests` Rest Assured framework.
+diff --git a/src/main/java/com/rajat/user_api/security/authentication/basic/BasicAuthenticationStrategy.java b/src/main/java/com/rajat/user_api/security/authentication/basic/BasicAuthenticationStrategy.java
+index 4e862e4..a8637ed 100644
+--- a/src/main/java/com/rajat/user_api/security/authentication/basic/BasicAuthenticationStrategy.java
++++ b/src/main/java/com/rajat/user_api/security/authentication/basic/BasicAuthenticationStrategy.java
+@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
+ 
+ import com.rajat.user_api.security.authentication.AuthenticationStrategy;
+ import com.rajat.user_api.security.authentication.SecurityMode;
++import com.rajat.user_api.security.config.PublicEndpoints;
+ 
+ @Component
+ public class BasicAuthenticationStrategy implements AuthenticationStrategy {
+@@ -22,13 +23,7 @@ public class BasicAuthenticationStrategy implements AuthenticationStrategy {
+             .csrf(csrf -> csrf.disable())
+             .httpBasic(httpBasic -> {})
+             .authorizeHttpRequests(auth -> auth
+-                    .requestMatchers(
+-                            "/auth/**",
+-                            "/swagger-ui/**",
+-                            "/v3/api-docs/**",
+-                            "/actuator/health",
+-                            "/actuator/info"
+-                    ).permitAll()
++                    .requestMatchers(PublicEndpoints.PERMIT_ALL).permitAll()
+                     .anyRequest().authenticated()
+             );
+ 
+diff --git a/src/main/java/com/rajat/user_api/security/authentication/jwt/JwtAuthenticationStrategy.java b/src/main/java/com/rajat/user_api/security/authentication/jwt/JwtAuthenticationStrategy.java
+index 4312452..46fb1d3 100644
+--- a/src/main/java/com/rajat/user_api/security/authentication/jwt/JwtAuthenticationStrategy.java
++++ b/src/main/java/com/rajat/user_api/security/authentication/jwt/JwtAuthenticationStrategy.java
+@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
+ 
+ import com.rajat.user_api.security.authentication.AuthenticationStrategy;
+ import com.rajat.user_api.security.authentication.SecurityMode;
++import com.rajat.user_api.security.config.PublicEndpoints;
+ import com.rajat.user_api.security.exception.JwtAccessDeniedHandler;
+ import com.rajat.user_api.security.exception.JwtAuthenticationEntryPoint;
+ import com.rajat.user_api.security.filter.JwtAuthenticationFilter;
+@@ -43,13 +44,7 @@ public class JwtAuthenticationStrategy implements AuthenticationStrategy {
+                     .authenticationEntryPoint(authenticationEntryPoint)
+                     .accessDeniedHandler(accessDeniedHandler))
+             .authorizeHttpRequests(auth -> auth
+-                    .requestMatchers(
+-                            "/auth/**",
+-                            "/swagger-ui/**",
+-                            "/v3/api-docs/**",
+-                            "/actuator/health",
+-                            "/actuator/info"
+-                    ).permitAll()
++                    .requestMatchers(PublicEndpoints.PERMIT_ALL).permitAll()
+                     .anyRequest().authenticated()
+             )
+             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+diff --git a/src/main/java/com/rajat/user_api/security/authentication/oauth2/OAuth2AuthenticationStrategy.java b/src/main/java/com/rajat/user_api/security/authentication/oauth2/OAuth2AuthenticationStrategy.java
+index 913782e..0226d1d 100644
+--- a/src/main/java/com/rajat/user_api/security/authentication/oauth2/OAuth2AuthenticationStrategy.java
++++ b/src/main/java/com/rajat/user_api/security/authentication/oauth2/OAuth2AuthenticationStrategy.java
+@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
+ 
+ import com.rajat.user_api.security.authentication.AuthenticationStrategy;
+ import com.rajat.user_api.security.authentication.SecurityMode;
++import com.rajat.user_api.security.config.PublicEndpoints;
+ 
+ @Component
+ public class OAuth2AuthenticationStrategy implements AuthenticationStrategy {
+@@ -21,13 +22,7 @@ public class OAuth2AuthenticationStrategy implements AuthenticationStrategy {
+         http
+             .csrf(csrf -> csrf.disable())
+             .authorizeHttpRequests(auth -> auth
+-                .requestMatchers(
+-                    "/auth/**",
+-                    "/swagger-ui/**",
+-                    "/v3/api-docs/**",
+-                    "/actuator/health",
+-                    "/actuator/info"
+-                ).permitAll()
++                .requestMatchers(PublicEndpoints.PERMIT_ALL).permitAll()
+                 .anyRequest().authenticated()
+             )
+             .oauth2Login(oauth2 -> {});
+diff --git a/src/main/java/com/rajat/user_api/security/config/PublicEndpoints.java b/src/main/java/com/rajat/user_api/security/config/PublicEndpoints.java
+new file mode 100644
+index 0000000..477f1ad
+--- /dev/null
++++ b/src/main/java/com/rajat/user_api/security/config/PublicEndpoints.java
+@@ -0,0 +1,16 @@
++package com.rajat.user_api.security.config;
++
++public final class PublicEndpoints {
++
++    private PublicEndpoints() {
++    }
++
++    public static final String[] PERMIT_ALL = {
++            "/auth/**",
++            "/swagger-ui/**",
++            "/swagger-ui.html",
++            "/v3/api-docs/**",
++            "/actuator/health",
++            "/actuator/info"
++    };
++}
+diff --git a/src/main/java/com/rajat/user_api/security/config/SecurityConfig.java b/src/main/java/com/rajat/user_api/security/config/SecurityConfig.java
+index d47e7a0..2894850 100644
+--- a/src/main/java/com/rajat/user_api/security/config/SecurityConfig.java
++++ b/src/main/java/com/rajat/user_api/security/config/SecurityConfig.java
+@@ -29,14 +29,7 @@ public class SecurityConfig {
+     @Order(1)
+     public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
+         http
+-            .securityMatcher(
+-                    "/auth/**",
+-                    "/swagger-ui/**",
+-                    "/swagger-ui.html",
+-                    "/v3/api-docs/**",
+-                    "/actuator/health",
+-                    "/actuator/info"
+-            )
++            .securityMatcher(PublicEndpoints.PERMIT_ALL)
+             .csrf(csrf -> csrf.disable())
+             .authorizeHttpRequests(auth -> auth
+                     .anyRequest().permitAll()

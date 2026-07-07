@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.rajat.user_api.security.authentication.AuthenticationStrategy;
 import com.rajat.user_api.security.authentication.SecurityMode;
+import com.rajat.user_api.security.config.PublicEndpoints;
 import com.rajat.user_api.security.exception.JwtAccessDeniedHandler;
 import com.rajat.user_api.security.exception.JwtAuthenticationEntryPoint;
 import com.rajat.user_api.security.filter.JwtAuthenticationFilter;
@@ -43,13 +44,7 @@ public class JwtAuthenticationStrategy implements AuthenticationStrategy {
                     .authenticationEntryPoint(authenticationEntryPoint)
                     .accessDeniedHandler(accessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(
-                            "/auth/**",
-                            "/swagger-ui/**",
-                            "/v3/api-docs/**",
-                            "/actuator/health",
-                            "/actuator/info"
-                    ).permitAll()
+                    .requestMatchers(PublicEndpoints.PERMIT_ALL).permitAll()
                     .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

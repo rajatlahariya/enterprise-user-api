@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.rajat.user_api.security.authentication.AuthenticationStrategy;
 import com.rajat.user_api.security.authentication.SecurityMode;
+import com.rajat.user_api.security.config.PublicEndpoints;
 
 @Component
 public class BasicAuthenticationStrategy implements AuthenticationStrategy {
@@ -22,13 +23,7 @@ public class BasicAuthenticationStrategy implements AuthenticationStrategy {
             .csrf(csrf -> csrf.disable())
             .httpBasic(httpBasic -> {})
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(
-                            "/auth/**",
-                            "/swagger-ui/**",
-                            "/v3/api-docs/**",
-                            "/actuator/health",
-                            "/actuator/info"
-                    ).permitAll()
+                    .requestMatchers(PublicEndpoints.PERMIT_ALL).permitAll()
                     .anyRequest().authenticated()
             );
 
