@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.rajat.user_api.specification.UserSpecification;
 import com.rajat.user_api.dto.request.UserPatchRequest;
@@ -100,15 +101,16 @@ public class UserService {
 		return userMapper.toResponse(patchedUser);
 	}
 
+	@Transactional
 	public void deleteUser(Long id) {
 
-		logger.info("Deleting user with id: {}", id);
+		logger.info("Soft deleting user with id: {}", id);
 
 		User user = findUserOrThrow(id);
+		user.setIsActive(false);
+		userRepository.save(user);
 
-		userRepository.delete(user);
-
-		logger.info("User deleted successfully with id: {}", id);
+		logger.info("User soft deleted successfully with id: {}", id);
 	}
 
 	private User findUserOrThrow(Long id) {

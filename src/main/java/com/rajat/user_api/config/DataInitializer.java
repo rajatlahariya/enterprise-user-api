@@ -3,6 +3,7 @@ package com.rajat.user_api.config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.rajat.user_api.entity.OAuthClient;
@@ -15,6 +16,7 @@ public class DataInitializer {
 
     private static final String DEFAULT_ADMIN_USERNAME = "rajat";
     private static final String DEFAULT_ADMIN_PASSWORD = "rajat123";
+    private static final String DEFAULT_ADMIN_EMAIL = "rajat2496@gmail.com";
     private static final String DEFAULT_CLIENT_ID = "rest-assured-client";
     private static final String DEFAULT_CLIENT_SECRET = "secret123";
     private static final String TEST_USER_PASSWORD = "Password@123";
@@ -33,6 +35,11 @@ public class DataInitializer {
     };
 
     @Bean
+    @ConditionalOnProperty(
+            name = "app.seed.enabled",
+            havingValue = "true",
+            matchIfMissing = true
+    )
     CommandLineRunner seedDefaultData(UserRepository userRepository,
                                       OAuthClientRepository oAuthClientRepository,
                                       PasswordEncoder passwordEncoder) {
@@ -47,12 +54,14 @@ public class DataInitializer {
     private void seedDefaultAdminUser(UserRepository userRepository,
                                       PasswordEncoder passwordEncoder) {
 
-        User user = userRepository.findByUsername(DEFAULT_ADMIN_USERNAME)
-                .orElseGet(User::new);
+        User user = userRepository.findByEmail(DEFAULT_ADMIN_EMAIL)
+                .orElseGet(() -> userRepository
+                        .findByUsername(DEFAULT_ADMIN_USERNAME)
+                        .orElseGet(User::new));
 
         user.setFirstName("Rajat");
         user.setLastName("Lahariya");
-        user.setEmail("rajat2496@gmail.com");
+        user.setEmail(DEFAULT_ADMIN_EMAIL);
         user.setAge(29);
         user.setIsActive(true);
         user.setUsername(DEFAULT_ADMIN_USERNAME);
